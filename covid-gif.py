@@ -1,35 +1,34 @@
-# Section 1 - Importing Libraries
+# Импорт библиотек
 import pandas as pd
-from datetime import datetime, timedelta
 import matplotlib.pyplot as plt
 import glob
 import moviepy.editor as mpy
 
-# Section 2 - Loading Data into Dataframes
-df = pd.read_csv('https://raw.githubusercontent.com/nytimes/covid-19-data/master/us-states.csv', parse_dates=['date'])
-populations = pd.read_csv('nst-est2019-alldata.csv?#', usecols=['NAME', 'POPESTIMATE2019'])
+# Преобразование данных в датафреймы
+df = pd.read_csv('us-states.csv', parse_dates=['date'])
+populations = pd.read_csv('nst-est2019-alldata.csv', usecols=['NAME', 'POPESTIMATE2019'])
 
-# Section 3 - Merging in Population Data & Calculating Rates
+# Мерж данных по населению; пересчет на 100 тыс.
 df = pd.merge(df, populations, how = 'left', left_on = 'state', right_on = 'NAME')
 df['rate'] = df['cases'] / df['POPESTIMATE2019'] * 100000
 
-# Section 4 - Identifying States
-df_today = df[df['date'] == datetime.strftime(datetime.now() - timedelta(1), '%Y-%m-%d')]
+# Отбор штатов
+df_today = df[df['date'] == '2020-04-16']
 topfivestates_rate = list(df_today.sort_values(by='rate', ascending=False).head()['state'])
 topfivestates_rate.append('California')
 topfivestates_rate.append('Washington')
 
-# Section 5 - Filtering our Dataset
+# Фильтрация датасета
 df = df[df['state'].isin(topfivestates_rate)]
 df = df[df['date'] >= '2020-03-01']
 df = df.pivot(index = 'date', columns = 'state', values = 'rate')
 
-# Section 6 - Preparing out Dataset for Graphing
+# Подготовка данных к отображению
 df = df.reset_index()
 df = df.reset_index(drop=True)
 df = df.drop(columns = 'date')
 
-# Section 7 - Graphing our Data
+# Построение графиков
 plt.style.use('fivethirtyeight')
 length = len(df.index)
 for i in range(10,length+10):
@@ -41,11 +40,11 @@ for i in range(10,length+10):
     ax.legend(loc='upper left', frameon=False)
     ax.grid(axis='x')
     fig = ax.get_figure()
-    fig.savefig(f"[path to folder]/pngs/{i}.png")
+    fig.savefig(f"pngs/{i}.png")
 
-# Section 8 - Generating our GIF
-gif_name = 'COVID.gif'
+# Генерация GIF
+gif_name = 'COVID'
 fps = 6
-file_list = glob.glob('[path to your PNG folder]/*')
+file_list = glob.glob('pngs/*')
 clip = mpy.ImageSequenceClip(file_list, fps=fps)
-clip.write_gif('{}.gif'.format(gif_name), fps=fps)pip install
+clip.write_gif('{}.gif'.format(gif_name), fps=fps)
